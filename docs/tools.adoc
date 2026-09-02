@@ -1,0 +1,17 @@
+= Tools used during the course
+
+* Java installation.
+    ** Java >=21.
+    ** E.g. link:https://projects.eclipse.org/projects/adoptium/downloads[Adoptium] distribution from Eclipse.
+    ** link:https://sdkman.io[SDKMAN] is a tool to help download and manage Java versions.
+
+* IDE: link:https://www.jetbrains.com/idea/download/[IntelliJ IDEA].
+    ** Note: we will not need any features that require a license.
+
+* link:https://git-scm.com/downloads[Git client].
+
+* link:https://www.docker.com/products/docker-desktop/[Docker Desktop].
+
+* link:https://code.visualstudio.com/[Visual Studio Code (VSC)].
+
+* link:https://nodejs.org/en/download[Node.js].

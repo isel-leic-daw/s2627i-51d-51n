@@ -1,6 +1,7 @@
 == Introduction
 
-TODO
+Sequence of exercises to illustrate the use of the Vite tool during the development of browser-based applications.
+The goal is to observe what Vite provides beyond the plain static file serving used in the link:./1-browser-application-loading.adoc[1-browser-application-loading] lecture note, namely the transformation of the content before it is served to the browser and the automatic reloading of the document when a file changes.
 
 == Requirements
 
@@ -18,7 +19,7 @@ TODO
     ** Is there a `node_modules` folder present?
 
 * Run `npm install vite --save-dev`
-    ** Note how a `devDependencies` property was added to `package.json``, containing an object with a `vite` property. What does this mean?
+    ** Note how a `devDependencies` property was added to `package.json`, containing an object with a `vite` property. What does this mean?
         *** What is the difference between `dependencies` and `devDependencies`?
     ** Is the `node_modules` folder present now? What is its contents?
     ** More information about `vite` can be found at link:https://vite.dev/[vite.dev].
@@ -32,8 +33,8 @@ TODO
     ** Open the developer tools on the initial tab (the one with `http://localhost:5173`) and observe the network traffic.
         *** Note how there are more requests, in addition to the `/`, `/s1.js`, `/s2.js`, and `/add.js` ones.
         *** Compare the response to `/` with the contents of `index.html`. Are they the same? If no, what is the difference?
-        *** Compare the response to `/t1.js` with the contents of `t1.js`. Are they the same? If no, what is the difference?
-    ** Open the console tab in the developers tools, ensure it is visible, change the context of `something` in `t1.js` and save the file.
+        *** Compare the response to `/s1.js` with the contents of `s1.js`. Are they the same? If no, what is the difference?
+    ** Open the console tab in the developers tools, ensure it is visible, change the context of `something` in `s1.js` and save the file.
         *** Did something happened automatically on the browser's console?
         *** Where there any requests performed by the browser when the `s1.js` file was saved?
         *** How can the browser react to a file being saved?
@@ -42,7 +43,7 @@ TODO
 * Install a new NPM library, by running `npm install url-template --save`
     ** Note how a `dependencies` property was added to `package.json`, containing an object with a `url-template` property.
     ** Add a `s3.js` file containing the following script
-
++
 [#initial-s3,javascript]
 ----
 import { parseTemplate } from 'url-template';
@@ -57,15 +58,15 @@ const emailUrl = emailUrlTemplate.expand({
 console.log(emailUrl);
 ----
 
-    ** Add `<script src="s3.ts" type="module"></script>` to `index.html` (inside the `head` element).
+    ** Add `<script src="s3.js" type="module"></script>` to `index.html` (inside the `head` element).
     ** Observe the browser's console output. Did the result of `console.log(emailUrl)` appear in the console?
     ** Observe the HTTP requests in the Network tab. Note how there is a request to `node_modules/.vite/deps/url-template.js`.
         *** Why did the browser do this request?
         *** Observe the contents of the response to `/s3.js`. Is it exactly the same as the `s3.js` file? If no, what is changed?
 
 * Rename `s3.js` to `s3.ts` and add some type information.
-    ** Do not forget to also do the renaming in the `index.html` file. 
-
+    ** Do not forget to also do the renaming in the `index.html` file.
++
 [#typescript-s3,typescript]
 ----
 import { parseTemplate } from 'url-template';
@@ -92,7 +93,7 @@ Vite is a tool that assists during the development and build of browser-based ap
     ** Rewriting bare module imports (e.g. `import { parseTemplate } from 'url-template'`) into URLs the browser can actually fetch, by pre-bundling the dependency from `node_modules` and serving it from `node_modules/.vite/deps/`. This is what allows a module installed in `node_modules` to be used directly from browser-side `import` statements, something the browser cannot resolve on its own.
     ** Applying TypeScript type erasure: when a `.ts` file, such as `s3.ts`, is requested, Vite strips the type annotations (e.g. `: string`) on the fly and serves plain JavaScript, without requiring a separate compilation step.
 
-* It watches the project's files for changes and, via a WebSocket connection established between the browser and the dev server, notifies the browser when a file changes so it can reload. In the exercises, saving `t1.js` triggered messages on that `ws:` connection and caused the browser to automatically reload the document, without requiring a manual refresh.
+* It watches the project's files for changes and, via a WebSocket connection established between the browser and the dev server, notifies the browser when a file changes so it can reload. In the exercises, saving `s1.js` triggered messages on that `ws:` connection and caused the browser to automatically reload the document, without requiring a manual refresh.
 
 == Summary
 
@@ -102,11 +103,11 @@ Vite is a tool that assists during the development and build of browser-based ap
     ** `dependencies` are packages the application needs at *runtime* (e.g. `url-template`, which is imported and used by the application's own code).
     ** `devDependencies` are packages only needed while *developing or building* the application (e.g. `vite`, the dev server/build tool itself) - they are not required for the application to run once built/deployed.
 
-* Running `npm run dev` starts an HTTP server, just like `serve` did in link:./1-browser-application-loading.adoc[1-browser-application-loading]: it serves `index.html` on `/` and the script files by their names, producing the same console output and the same behaviors around classic vs. module scripts, `document`, and ESM caching already explained in that lecture note's Theory section.
+* Running `npm run dev` starts an HTTP server, just like `serve` did in link:./1-browser-application-loading.adoc[1-browser-application-loading]: it serves `index.html` on `/` and the script files by their names, producing the same console output and the same behaviors around classic vs. module scripts, `document`, and ESM caching already explained in that lecture note's `Theory` section.
 
 * Neither the response to `/` nor the responses to the individual script files are byte-for-byte identical to the files on disk - Vite transforms content as it serves it:
     ** The response to `/` contains `index.html`'s content plus an extra `<script type="module" src="/@vite/client">` element injected into the page. This is the client-side piece that opens the WebSocket connection back to the dev server.
-    ** The responses to the script files (e.g. `/t1.js`) go through Vite's transform pipeline as well, even when the source is plain JavaScript with no imports to rewrite - e.g. an inline sourcemap comment (`//# sourceMappingURL=...`) is appended, which is also how the dev server keeps the ability to map served code back to the original file for debugging.
+    ** The responses to the script files (e.g. `/s1.js`) go through Vite's transform pipeline as well, even when the source is plain JavaScript with no imports to rewrite - e.g. an inline sourcemap comment (`//# sourceMappingURL=...`) is appended, which is also how the dev server keeps the ability to map served code back to the original file for debugging.
 
 * Saving a change to a watched file (e.g. changing `something` in a script) is followed automatically, without any manual reload, by console output reflecting the new content. This happens because:
     ** The dev server watches the project's files on disk.

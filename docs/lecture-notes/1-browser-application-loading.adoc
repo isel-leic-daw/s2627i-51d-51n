@@ -31,7 +31,7 @@ Sequence of exercises to illustrate the loading and execution of scripts in the 
 * Start `serve` on the created folder
     ** E.g. `serve .`
 
-* Open the browser in `http://localhost:3000` (confirm port on the information produced by `serve``).
+* Open the browser in `http://localhost:3000` (confirm port on the information produced by `serve`).
     ** Observe the result in the browser.
     ** Open the browser's development tools and observe the network requests.
     ** Notice how a `GET` to `/` returns the content of `index.html` in the response message body.
@@ -74,10 +74,10 @@ console.log(something)
 
 * Add the attribute `type="module"` to the `script` element for `s1.js`.
     ** What is the value presented for `console.log(mainHeading)`?
-    ** Does the previous error still exists? Why?
+    ** Does the previous error still exist? Why?
     ** What appears first: `I'm s1` or `I'm s2`?
 
-== Javascript modules
+== JavaScript modules
 
 * Create a file `add.js` with
 [#initial-add.js,javascript]
@@ -93,7 +93,7 @@ export function add(x,y){
     ** Remove `add.js` from `index.html`.
 
 * Add the following to the beginning of both `s1.js` and `s2.js`
-
++
 [#import-add,javascript]
 ----
 import { add } from './add.js'
