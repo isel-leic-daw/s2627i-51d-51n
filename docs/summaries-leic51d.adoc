@@ -16,5 +16,5 @@
 * Resources:
     ** link:./lecture-notes/0-course-introduction.adoc[Lecture note: course introduction].
     ** link:./lecture-notes/1-browser-application-loading.adoc[Lecture note: browser application loading].
-    ** link:./lecture-notes/1-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
+    ** link:./lecture-notes/2-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
     ** link:../code/js/leic51d/browser-app-loading[Live code: browser application loading].
