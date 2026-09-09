@@ -265,6 +265,73 @@ const a1: CanShiftAndHasLength = ['a', 'b']
 // const s1: CanShiftAndHasLength = 'ab' - type system error - the `string` type does not have a `shift` property.
 ----
 
+== Optional properties of object types
+
+Object properties can be declared optional by using the `?` suffix on the _property name_.
+
+[#optional-properties, typescript]
+----
+type Student = {
+  name: string,
+  finalGrade?: number,
+}
+----
+
+== Readonly properties of object types
+
+Object properties can be declared readonly by using the `readonly` prefix on the _property name_.
+
+[#readonly-properties, typescript]
+----
+type Student = {
+  name: string,
+  readonly number?: number,
+}
+----
+
+== Object types and index signatures
+
+Object types can be defined with an open set of property names.
+
+[#index-signatures, typescript]
+----
+type Properties = {
+  [index: string]: string | number
+}
+----
+
+This type means that an object of type `Properties` can be indexed using a string and the result with be either a `string` or a `number` (or `undefined``).
+
+Some usage examples:
+
+[#index-signatures-examples, typescript]
+----
+type Properties = {
+  [index: string]: string | number
+}
+
+const props: Properties = {
+  name: "alice",
+  id: 1234,
+  // enrolled: true - ERROR Type 'boolean' is not assignable to type 'string | number'
+}
+
+function someFunctionUsingProperties(props: Properties) {
+  // const name: string = props.name - ERROR Type 'string | number' is not assignable to type 'string'
+
+  // This showns an unsoundness of the TypeScript type system
+  // The statement below can fail at runtime, even if the program "type-checks"
+  const foo: string | number = props.foo
+  foo.toString() // This may fail in runtime.
+
+  // Going through all the properties
+  for(const [key, value] of Object.entries(props)) {
+    const theKey: string = key
+    const theValue: string | number = value
+  }
+}
+----
+
 == Exercise: type system introduction
 
 * Fix the TypeScript code in the following link:https://www.typescriptlang.org/play/?#code/C4TwDgpgBAKg8gETlAvFA3gEwgZwMYBOAlmMEQPYB2AXFAERgA2AhnhABbmPYFQBm5XsyihII9s2BQcnAK7coAI2h4JlAOYRMAbigBbZiCXRMRPnwgEIlKUUpQIrdlHJ48sq5TZ0AvgCg-AHpAqDBiPSIyADdoUVw-PCocKWYAZWBiDVp4JFR6dghGRnI6BKSUgDlZPWUCbMRkNABGACYAZgAWAFYyymSoZgAhci5HGlgGvIzZCADggYICQxxe-rSMu3UAQUXDety0AG06AAlC4roAGnoAdUFuOgBdOZDyRQArCDwpOJW4qHSsmwNjy6D8UAhUEozD0EH2cEu4MhlEUdQmSER-lWKUYRDY8NBSIh0NhtDoW1x3kRkKhqNorU6PSx8xw1RE4HifFkXjIVCgmHIqXIsOA7E2AAo7GBZMB4QBKDABGlmKDiuLkPhQKUy1AoNB0ZKZdR0BVgmk0xJ9UYAOmK6kllGlwGtwHIAFUwJACABhZg4CDiuVyolQHwORj+xXmyGWnA2u0Op1QAC0UDawZp-ixsZSuxAcD46SNcAIVRqlhwBKO5MpECuUAZ3WeOdCzCIBBukXYWzLtS2lEwWyLmyrUEOja61xreLrzyCIVM+HCdkkWmkbN+fn+ACVcPIpGg-AAfDAAazsmHh10sBEEtAAootBP4T+hzwOr9JgJJZJWodVaixLkeQoewBX7chRUsGAxQ0cUrFZRhZSgXdEOAU0QxwAB3SJVHgvckOtd9MAw6MITwP1oDoSgIGALDBFPZMb0EOhaDNMiLSSeNyHtBD92tZiCAzDjIVRRxT20ENMykmNKPyYBgDAZMELAJI6zYmTo1jbjeII51iOEkSlCsZgJM00MQyzPwgA[TypeScript Playground].
