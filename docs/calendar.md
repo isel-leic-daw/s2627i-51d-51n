@@ -64,7 +64,7 @@
 - Advanced HTTP (e.g. caching, conditional requests).
 
 ### W14 - 2026-12-07
-- Suppoer the development of the final project.
+- Support the development of the final project.
 
 ### W15 - 2026-12-14
 - Evaluations of the final project.
