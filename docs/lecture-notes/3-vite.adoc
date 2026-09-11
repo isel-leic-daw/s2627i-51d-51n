@@ -27,7 +27,7 @@ The goal is to observe what Vite provides beyond the plain static file serving u
 * Add `"dev": "vite"` to the `scripts` object inside `package.json` (don't forget the required commas to ensure the file content is valid JSON).
 
 * Run `npm run dev` and open a browser tab on the URL provided by Vite (e.g. `http://localhost:5173`).
-    ** Observe the console output. Compare it with the output produced in the context of link:./1-browser-application-loading.adoc[1-browser-application-loading] lecture note.
+    ** Observe the console output. Compare it with the output produced in the content of link:./1-browser-application-loading.adoc[1-browser-application-loading] lecture note.
     ** Open a different browser tab and use the following URL on it `http://localhost:5173/s1.js`. What is the result?
     ** Running `npm run dev` seems to have started an HTTP server, that is serving the folder contents, similarly to what `serve` does.
     ** Open the developer tools on the initial tab (the one with `http://localhost:5173`) and observe the network traffic.
