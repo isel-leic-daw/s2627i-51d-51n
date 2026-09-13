@@ -20,7 +20,9 @@ const tree: React.ReactElement = React.createElement("div", { id: "div-id" },
     React.createElement("p", null, "List of Items:"),
     React.createElement("ul", null,
         React.createElement("li", null, "Item 0"),
-        React.createElement("li", null, "Item 1")));
+        React.createElement("li", null, "Item 1")
+    )
+);
 ----
 
 Note how the tree of elements and text nodes is created by a single JavaScript composite expression (and not a set of statements).
