@@ -18,3 +18,22 @@
     ** link:./lecture-notes/1-browser-application-loading.adoc[Lecture note: browser application loading].
     ** link:./lecture-notes/2-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
     ** link:../code/js/leic51d/browser-app-loading[Live code: browser application loading].
+
+== Lecture 2 - 2025-09-11
+
+* Continuation of the previous lecture - Introduction to the TypeScript language.
+    ** Motivation.
+    ** Primitive types.
+    ** Composite types.
+    ** Array types and tuple types.
+    ** Function types.
+    ** Union types and type narrowing
+    ** Object types.
+    ** Literal types.
+    ** Discriminated unions.
+    ** Object types and index signatures.
+* Introduction to the Vite tooling.
+
+* Resources:
+    ** link:./lecture-notes/2-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
+    ** link:./lecture-notes/3-vite.adoc[An Introduction to the Vite Tool].

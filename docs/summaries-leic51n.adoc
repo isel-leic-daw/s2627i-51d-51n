@@ -2,4 +2,38 @@
 :toc:
 
 == Lecture 1 - 2025-09-09
-TBD
+
+* Course introduction
+    ** Goals
+    ** Calendar
+    ** Grading
+    ** Resources
+* The loading and executions of HTML documents and JavaScript programs in browsers.
+    ** The `script` element and the execution of JavaScript programs.
+    ** JavaScript modules and their behaviour.
+* Introduction to the TypeScript language.
+
+* Resources:
+    ** link:./lecture-notes/0-course-introduction.adoc[Lecture note: course introduction].
+    ** link:./lecture-notes/1-browser-application-loading.adoc[Lecture note: browser application loading].
+    ** link:./lecture-notes/2-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
+    ** link:../code/js/leic51n/browser-app-loading[Live code: browser application loading].
+
+== Lecture 2 - 2025-09-11
+
+* Continuation of the previous lecture - Introduction to the TypeScript language.
+    ** Motivation.
+    ** Primitive types.
+    ** Composite types.
+    ** Array types and tuple types.
+    ** Function types.
+    ** Union types and type narrowing
+    ** Object types.
+    ** Literal types.
+    ** Discriminated unions.
+    ** Object types and index signatures.
+* Introduction to the Vite tooling.
+
+* Resources:
+    ** link:./lecture-notes/2-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
+    ** link:./lecture-notes/3-vite.adoc[An Introduction to the Vite Tool].
