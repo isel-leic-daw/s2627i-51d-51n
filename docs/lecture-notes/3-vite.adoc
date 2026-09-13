@@ -1,3 +1,5 @@
+= An Introduction to the Vite Tool
+
 == Introduction
 
 Sequence of exercises to illustrate the use of the Vite tool during the development of browser-based applications.
@@ -119,4 +121,3 @@ Vite is a tool that assists during the development and build of browser-based ap
 * Consistently with this, the response to `/s3.js` is *not* identical to the `s3.js` file on disk: the `import { parseTemplate } from 'url-template'` line is rewritten by Vite to import from the resolved `/node_modules/.vite/deps/url-template.js` URL instead.
 
 * The response to `/s3.ts` no longer contains the `: string` type annotation. Vite applies TypeScript *type erasure* on the fly when serving `.ts` files: it strips the type-only syntax and serves valid JavaScript, without a separate compile step the developer has to run.
-
