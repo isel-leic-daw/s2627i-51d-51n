@@ -182,6 +182,7 @@ const isOdd: Predicate<number> = function(input) {
 Type narrowing is the refinement of the type information associated with an expression, based on flow control analysis.
 In Kotlin, a similar feature is called "smart casts".
 In the example below, the type of `value` is different in the _then_ and _else_ branches of the `if` statement:
+
 * Outside the `if` statement, the type of `value` is `number | string`.
 * Inside the _then_ it is the more specific (_narrow_) `string` type.
 * Inside the _else_ it is the more specific `number` type.
@@ -223,6 +224,7 @@ Discriminated union types are union types where each branch is an object type.
 To distinguish between them, each object type defines a discriminator property (e.g. `kind`, `tag`) with a distinct type.
 
 In the example below, `FetchResult` is a union with two branches:
+
 * `{ kind: 'network-error', error: Error}`
 * `{ kind: 'http-response', status: number}`
 
@@ -376,8 +378,8 @@ createElement("a", {}, [true])
 ----
 
 * Change the type of the parameters so that the `any` type is _never_ used, and:
-** The "valid usages" don't produce any compiler error.
-** The "invalid usages" produce the expected compiler error.
+  ** The "valid usages" don't produce any compiler error.
+  ** The "invalid usages" produce the expected compiler error.
 
 * Implement the `createElement` body.
 
