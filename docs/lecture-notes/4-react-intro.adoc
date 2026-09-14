@@ -206,6 +206,8 @@ Note:
 
 * How JSX expressions _are just_ an alternative way of defining expressions involving calls to `React.createElement`, that is, an alternative way of defining trees of React elements and text nodes.
 
+NOTE: When using more recent React versions, the recommended translation from JSX is into a `jsx` function and not into the `createElement` function. In this lecture note, we use the classic translation because we consider it to be easier to understand. The `tsconfig.json` is needed exactly to change this default behavior.
+
 == Virtual DOM
 
 React elements are not elements of the browser's native DOM.
@@ -353,7 +355,7 @@ function Item({ label }: { label: string }): ReactElement {
 }
 ----
 
-NOTE: React component names need to start with uppercase.
+NOTE: React component names must start with an uppercase letter. JSX treats a lowercase tag, such as `<item />`, as an HTML element named `"item"`, and not as a reference to the `Item` function.
 
 Replace the `computeView` function with:
 
@@ -389,6 +391,15 @@ Component functions should be _pure_.
 * Application code _never_ calls React components. Instead, application code creates React elements that refer to React components.
 * It is the React library that calls the React component functions.
 * When and how many times React calls a component function is controlled by React and not specified, i.e., application code cannot rely on it. This is why component functions should be pure, i.e., free from side-effects.
+
+== Components and Elements
+
+Components and elements are not the same thing:
+
+* Components are _functions_ that map properties into elements.
+* Elements, created by calls to `React.createElement`, either directly or via JSX, are used to define the UI. Their type can be either an HTML element name (e.g. `<p>Hello</p>`, with type `"p"`) or a component (e.g. `<Item label="Hello" />`, with type `Item`).
+
+IMPORTANT: `Item` and `<Item label="Hello" />` are different things. The first evaluates to a function, the second evaluates to a React element.
 
 == Summary
 
