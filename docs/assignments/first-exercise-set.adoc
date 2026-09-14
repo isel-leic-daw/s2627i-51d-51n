@@ -27,11 +27,11 @@ This function behaves similarly to `useState`; however, the returned array has t
 * The `undo` function sets the current state to the previous state, if it exists.
 
 Undo supports multiple levels: successive calls to `undo` go back through all the previous values, and `hasUndo` remains `true` while there is still a previous value to go back to.
-Calling `setValue` with a value equal to the current observed value (compared with `Object.is`, as in `useState`) has no effect, i.e., it changes neither the state nor the undo history.
+Calling `setValue` with a value equal to the current observed value (compared with `Object.is`) has no effect, i.e., it changes neither the state nor the undo history.
 
 Unlike the setter returned by `useState`, `setValue` accepts only the new value, not an updater function (i.e., a function that computes the new state from the previous one).
 
-Create a program to illustrate the usage of this hook.
+Create a program to illustrate the usage of this hook function.
 
 === Exercise 2
 
