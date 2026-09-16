@@ -108,7 +108,7 @@ Vite is a tool that assists during the development and build of browser-based ap
 * Running `npm run dev` starts an HTTP server, just like `serve` did in link:./1-browser-application-loading.adoc[1-browser-application-loading]: it serves `index.html` on `/` and the script files by their names, producing the same console output and the same behaviors around classic vs. module scripts, `document`, and ESM caching already explained in that lecture note's `Theory` section.
 
 * Neither the response to `/` nor the responses to the individual script files are byte-for-byte identical to the files on disk - Vite transforms content as it serves it:
-    ** The response to `/` contains `index.html`'s content plus an extra `<script type="module" src="/@vite/client">` element injected into the page. This is the client-side piece that opens the WebSocket connection back to the dev server.
+    ** The response to `/` contains `index.html` content plus an extra `<script type="module" src="/@vite/client">` element injected into the page. This is the client-side piece that opens the WebSocket connection back to the dev server.
     ** The responses to the script files (e.g. `/s1.js`) go through Vite's transform pipeline as well, even when the source is plain JavaScript with no imports to rewrite - e.g. an inline sourcemap comment (`//# sourceMappingURL=...`) is appended, which is also how the dev server keeps the ability to map served code back to the original file for debugging.
 
 * Saving a change to a watched file (e.g. changing `something` in a script) is followed automatically, without any manual reload, by console output reflecting the new content. This happens because:
