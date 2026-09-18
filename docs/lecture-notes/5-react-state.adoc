@@ -290,13 +290,7 @@ To complement this lecture note, we recommend the reading of the link:https://re
 
 == Additional exercises
 
-= Exercises on React state management
-
-== Introduction
-
-This document contains a set of exercises about React state management.
-
-== `Counter` component
+=== `Counter` component
 
 Create a `Counter` component with the following _props_ type.
 [source, typescript]
@@ -314,7 +308,7 @@ This component should present:
 
 If `onIncrement` is present in the _props_ object, then this function should be called every time the counter is updated.
 
-== `InputBox` component
+=== `InputBox` component
 
 Create an `InputBox` component with the following _props_ type.
 [source, typescript]
@@ -338,7 +332,7 @@ When the submit button is clicked, the `onSubmit` function should be called with
 
 An error message should be shown when the input is not empty and does not satisfy the `minLength` and `maxLength` requirements.
 
-== `CounterList` component
+=== `CounterList` component
 
 NOTE: this exercise suggests the use of the `useReducer` hook. See link:https://react.dev/learn/extracting-state-logic-into-a-reducer[Extracting State Logic into a Reducer] for more information about this state management hook.
 
@@ -377,5 +371,3 @@ type Action =
 ----
 
 Start by defining the reducer function, then define the component.
-
-
