@@ -346,3 +346,31 @@ Observe also the console logs, namely:
 
 * How there is a render immediately after a new period is defined.
 * How that render is followed by the _effect cleanup_ and a new execution of the _effect function_, with the new `props.period` value.
+
+== Summary
+
+* Component functions must be free of side effects: React decides when and how many times they are called, so anything that creates or mutates state outside React (e.g. an interval, a subscription, a network request) cannot be done during the render.
+* The `useEffect` _hook_ function is the way to associate such side effects with a component. It receives an _effect function_ as the first argument and an _effect dependency array_ as the second one.
+* `useEffect` and the _effect function_ are distinct things: `useEffect` is called on _every_ render, however the _effect function_ it receives is not. React decides when to call it, based on the dependency array.
+* With an empty dependency array, the _effect function_ is called exactly once for each placement of the component in the render-tree.
+* The _effect function_ can return a _cleanup function_, called before each subsequent execution of the _effect function_ and when the component placement is removed from the render-tree. Resources created by the effect and not managed by React must be released there, otherwise they leak.
+* On every `useEffect` call for the same render-tree position, React compares the dependency array with the one from the previous call, element by element and using `Object.is`. If any element is different, React runs the previous _cleanup function_ and then the new _effect function_. The array must have the same length on every call.
+* Every _props_ or _state_ observation used by the _effect function_ should be present in the dependency array. Otherwise the effect keeps using the values observed when it last ran, which is why the `Timer` ignored the `period` changes until `props.period` was added as a dependency.
+* Each _state_ or _props_ observation is a _constant_ that is _local_ to one execution of the component function. A lambda expression defined during a render captures the observations of _that_ render and keeps using them whenever it is called in the future, even after new renders have occurred.
+* This _stale observation_ problem is not specific to timers: it applies to any lambda expression that outlives the render where it was created, such as interval or event callbacks. Component authors are responsible for ensuring that stale observations are not used.
+* When the new state depends on the current state, use the _state setter_ form that receives an _update function_ (e.g. `setCount(currState => currState + 1)`), instead of computing the new value from a captured observation.
+* Placing a component in a position of the render-tree is called _mounting_ it, and removing it from that position is called _unmounting_ it. React discards the associated state on unmount, which is why a re-enabled `Timer` starts at zero again. Re-running an effect because its dependencies changed is *not* an unmount, so the state is preserved.
+* A component can be _conditionally placed_ in the render-tree with the `&&` operator, since JSX expressions can contain JavaScript _expressions_ but not _statements_.
+
+== Additional exercises
+
+* Add a pause/resume single button to the `Timer` component. The button should present different text, depending on the pause/resume state.
+
+== Additional resources
+
+* From the official link:https://react.dev[React documentation]:
+  ** link:https://react.dev/learn/synchronizing-with-effects[Synchronizing with Effects].
+  ** link:https://react.dev/learn/you-might-not-need-an-effect[You Might Not Need an Effect].
+  ** link:https://react.dev/learn/lifecycle-of-reactive-effects[Lifecycle of Reactive Effects].
+  ** link:https://react.dev/learn/separating-events-from-effects[Separating Events from Effects].
+  ** link:https://react.dev/learn/removing-effect-dependencies[Removing Effect Dependencies].
