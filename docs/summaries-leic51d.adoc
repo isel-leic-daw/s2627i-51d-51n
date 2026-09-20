@@ -1,7 +1,7 @@
 = Summaries LEIC51D
 :toc:
 
-== Lecture 1 - 2025-09-09
+== Lecture 1 - 2026-09-09
 
 * Course introduction
     ** Goals
@@ -19,7 +19,7 @@
     ** link:./lecture-notes/2-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
     ** link:../code/js/leic51d/browser-app-loading[Live code: browser application loading].
 
-== Lecture 2 - 2025-09-11
+== Lecture 2 - 2026-09-11
 
 * Continuation of the previous lecture - Introduction to the TypeScript language.
     ** Motivation.
@@ -37,3 +37,27 @@
 * Resources:
     ** link:./lecture-notes/2-typescript-intro.adoc[Lecture note: A very succinct introduction to TypeScript].
     ** link:./lecture-notes/3-vite.adoc[An Introduction to the Vite Tool].
+
+== Lecture 3 - 2026-09-16
+
+* Completing the introduction to the Vite tool.
+* Introduction to the React library and the associated programming model.
+
+* Resources:
+    ** link:./lecture-notes/3-vite.adoc[An Introduction to the Vite Tool].
+    ** link:./lecture-notes/4-react-intro.adoc[An introduction to React].
+
+== Lecture 4 - 2026-09-18
+
+* The React library and its associated programming model:
+    ** Virtual DOM, native DOM, and reconciliation.
+    ** Components as functions from _properties_ into _element trees_.
+    ** Elements as the definition of the desired UI shape, using both primitive HTML element names and component functions.
+* Management of state by React components:
+    ** The challenges of where to locate component usage state.
+    ** The `useState` _hook_ function.
+    ** A model for how `useState` works. 
+
+* Resources:
+    ** link:./lecture-notes/4-react-intro.adoc[An introduction to React].
+    ** link:./lecture-notes/5-react-state.adoc[Introduction to React State Management].
