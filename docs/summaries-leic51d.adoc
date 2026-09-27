@@ -61,3 +61,27 @@
 * Resources:
     ** link:./lecture-notes/4-react-intro.adoc[An introduction to React].
     ** link:./lecture-notes/5-react-state.adoc[Introduction to React State Management].
+
+== Lecture 5 - 2026-09-23
+
+* Introduction to React effect management.
+* Render function and reactive and non-reactive sources of information.
+* Passing information from ancestors to descendants in the component tree:
+    ** Via props.
+    ** Via React context.
+
+* Resources:
+    ** link:./lecture-notes/5-react-effects.adoc[Introduction to React Effects].
+    ** link:https://react.dev/learn/extracting-state-logic-into-a-reducer[Extracting State Logic into a Reducer].
+    ** link:https://react.dev/learn/synchronizing-with-effects[Synchronizing with Effects].
+    ** link:https://react.dev/learn/you-might-not-need-an-effect[You Might Not Need an Effect].
+    ** link:https://react.dev/learn/lifecycle-of-reactive-effects[Lifecycle of Reactive Effects].
+    ** link:https://react.dev/learn/separating-events-from-effects[Separating Events from Effects].
+    ** link:https://react.dev/learn/removing-effect-dependencies[Removing Effect Dependencies].
+
+== Lecture 6 - 2026-09-25
+
+* Continuation of the previous lecture.
+* Examples using reducers with TypeScript.
+* Resources:
+    ** See resources from the previous lecture.
