@@ -492,6 +492,12 @@ Unfortunately, the need to annotate some classes with `@Component` breaks that i
 However, the annotated classes can still be used without a container, since the presence of the `@Component` annotation does not mandate the use of a container or component scanning.
 It simply enables the use of component scanning.
 
+== Source Code and Additional Spring Context Examples.
+
+The link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/spring-context[`spring-context`] project contains the source code for the example used in this lecture note.
+It also contains addition examples on using the Spring Context library.
+See link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/spring-context[README.md] on that project for more information.
+
 == Summary and Recommended Practices
 
 === Summary
