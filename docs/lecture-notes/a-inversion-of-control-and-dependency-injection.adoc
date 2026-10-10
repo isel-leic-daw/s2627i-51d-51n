@@ -496,7 +496,7 @@ It simply enables the use of component scanning.
 
 The link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/spring-context[`spring-context`] project contains the source code for the example used in this lecture note.
 It also contains addition examples on using the Spring Context library.
-See link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/spring-context[README.md] on that project for more information.
+See link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/spring-context/README.md[README.md] on that project for more information.
 
 == Summary and Recommended Practices
 

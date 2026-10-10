@@ -1,0 +1,94 @@
+= Development environment
+
+== Introduction
+
+This guide has the goal of ensuring all the tools required for the first part of the course are installed and working properly on the student's machines.
+
+== Steps
+
+* Make sure the following tools are installed.
+    ** link:https://git-scm.com/downloads[Git client].
+    ** Java 21.
+    ** IntelliJ.
+    ** Docker Desktop.
+
+[source, bash]
+----
+git clone git@github.com:isel-leic-daw/s2627i-51d-51n.git
+----
+
+* Move into the `s2627i-51d-51n/code/jvm/spring-context` folder.
+
+[source, bash]
+----
+cd s2627i-51d-51n/code/jvm/spring-context
+----
+
+* Run the `check` task, which
+    ** Fetches the dependencies.
+    ** Compiles the source code.
+    ** Runs the tests.
+    ** Checks the code style.
+
+* Ensure the previous task execution is successful. 
+
+[source, bash]
+----
+./gradlew check
+----
+
+* Ensure the course repository can be updated with the latest changes.
+
+[source, bash]
+----
+git pull
+----
+
+* Open the project located on `code/jvm/spring-context`.
+    ** Inside IntelliJ, open the file `code/jvm/spring-context/build.gradle.kts` as a project.
+* Run all the programs located in the `code/jvm/spring-context/src/main/kotlin/pt/isel/daw` folder and sub-folders, from inside IntelliJ.
+* Run all the tests located in the `code/jvm/spring-context/src/test/kotlin/pt/isel/daw` folder and sub-folders, from inside IntelliJ.
+
+* Start a container with the PostgreSQL relational database management system (RDBMS).
+
+[source, bash]
+----
+docker run --name postgres-container -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres
+----
+
+* After running this command:
+    ** The created container will be called `postgres-container`.
+    ** Port `5432` of the container will be exposed on port `5432` of the local host.
+    ** The `POSTGRES_PASSWORD` environment variable will be set to `password`, defining the password used by the RDBMS.
+    ** The `-d` flag means that the shell will not be blocked while the container is running.
+    ** The last `postgres` defines the name of the image to use - https://hub.docker.com/_/postgres.
+
+* List the running containers by running and confirm the copntainer with the RDBMS is running.
+
+[source, bash]
+----
+docker ps --all
+----
+
+* Use a RDBMS client, such as the ones used in previous courses, to connect to the PostgreSQL RDBMS.
+
+* Open a shell inside the container by running
+----
+docker exec -ti postgres-container bash 
+----
+
+* Inside that shell, run the `psql` client.
+    ** `psql` is a command line interface program to manage and interact with a PostgreSQL RDBMS.
+    ** `psql` may not be available on your host machine but is available inside the created container. That's why we first opened a shell inside the container.
+
+[source, bash]
+----
+psql postgres postgres
+----
+
+* If a prompt such as the one below appears, that means that `psql` correctly connected to the PostgreSQL RDBMS instance.
+
+[source, bash]
+----
+postgres=#
+----
