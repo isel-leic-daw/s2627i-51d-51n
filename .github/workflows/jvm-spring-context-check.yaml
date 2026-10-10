@@ -1,0 +1,20 @@
+name: spring-context continuous check
+
+on: 
+  push:
+    paths:
+      - code/jvm/spring-context/**
+
+jobs:
+  build:
+    name: Spring Context Example Continuous Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+      - name: Build with Gradle
+        run: ./code/jvm/spring-context/gradlew -p code/jvm/spring-context check --info

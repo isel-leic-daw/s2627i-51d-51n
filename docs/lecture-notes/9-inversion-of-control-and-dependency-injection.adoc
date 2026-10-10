@@ -1,0 +1,566 @@
+= Inversion of Control and Dependency Injection
+
+:toc:
+
+== Introduction
+
+This lecture note presents the _inversion of control_ (IoC) design technique and the related concepts of _dependency injection_ (DI) and _dependency injection container_.
+It also introduces the Spring Context container.
+
+== A Motivating Example
+
+Throughout this lecture note, password management will serve as the motivating example.
+The goal is to create a mechanism to manage users' passwords, specifically to:
+
+* Set the password for a user.
+* Check if a provided password matches a user's password.
+
+We start modeling this problem by creating a `PasswordService` class with two functions: `set` and `check`.
+
+[source,kotlin]
+----
+class PasswordService {
+    fun set(user: UserId, password: PlainTextPassword) = TODO()
+    fun check(user: UserId, password: PlainTextPassword): Boolean = TODO()
+}
+----
+
+The `UserId` and `PlainTextPassword` classes represent two domain concepts: a user identifier and a password.
+
+Internally, both are represented as strings, so we could consider using `String` directly.
+However, even if they share the same internal representation, a user identifier and a password are different concepts and deserve distinct types.
+Defining a `set` function that receives two `String` parameters, instead of a `UserId` and `PlainTextPassword`, would allow mix-ups that the type system cannot detect, such as passing the password as the user identifier.
+
+[source,kotlin]
+----
+@JvmInline
+value class UserId(
+    val id: String,
+)
+
+@JvmInline
+value class PlainTextPassword(
+    val value: String,
+)
+----
+
+NOTE: For more information about Kotlin's value classes and the `@JvmInline` annotation, see link:https://kotlinlang.org/docs/inline-classes.html[Inline value classes].
+
+== Decomposing the Problem
+
+We begin by decomposing the required functionality into two sub-problems.
+The first is to avoid storing passwords directly in the storage system.
+Instead, we will store a _transformation_ of the password that has the following properties:
+
+- It is computationally feasible to compute the transformation of a password.
+- It is computationally expensive to compute a password from its transformation.
+- It is computationally inexpensive to check if a transformed password matches a password.
+
+The second sub-problem is storing and retrieving transformed passwords, indexed by user identifiers.
+
+We model the solution to the first sub-problem as the `PasswordTransformer` interface:
+
+[source, kotlin]
+----
+@JvmInline
+value class TransformedPassword(
+    val value: String,
+)
+
+interface PasswordTransformer {
+    fun transform(plainTextPassword: PlainTextPassword): TransformedPassword
+    fun check(plainTextPassword: PlainTextPassword, transformedPassword: TransformedPassword): Boolean
+}
+----
+
+Note the creation of the `TransformedPassword` class.
+Its internal representation is a `String`; however, we decided to create a specific class for it.
+Again, we want the type system to protect us from mixing up plain text passwords, whose content is sensitive, with transformed passwords.
+
+The solution to the second sub-problem is modeled as the `PasswordStorage` interface:
+
+[source, kotlin]
+----
+interface PasswordStorage {
+    fun set(userId: UserId, transformedPassword: TransformedPassword)
+    fun get(userId: UserId): TransformedPassword?
+}
+----
+
+Note how `PasswordStorage` only exposes functions to store `TransformedPassword` and not `PlainTextPassword`.
+This protects us from inadvertently storing plain text passwords, which could happen if we represented everything as `String`.
+
+== An Example `PasswordTransformer`
+
+The `InsecureSha256HashBasedPasswordTransformer` class implements the `PasswordTransformer` interface by using a cryptographic hash function to map the password into the transformed password.
+
+A single application of a hash function is not enough to adequately protect the password, but it will suffice for this example.
+For better approaches to transforming passwords for storage, we recommend the link:https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html[OWASP Password Storage Cheat Sheet].
+
+[source, kotlin]
+----
+class InsecureSha256HashBasedPasswordTransformer : PasswordTransformer {
+
+    override fun transform(plainTextPassword: PlainTextPassword): TransformedPassword {
+        val hashFunction: MessageDigest = MessageDigest.getInstance("SHA-256")
+        val plainBytes: ByteArray = plainTextPassword.value.encodeToByteArray()
+        val hashValue: ByteArray = hashFunction.digest(plainBytes)
+        val hashValueAsString: String = Base64.getUrlEncoder().encodeToString(hashValue)
+        return TransformedPassword(hashValueAsString)
+    }
+
+    override fun check(
+        plainTextPassword: PlainTextPassword,
+        transformedPassword: TransformedPassword
+    ): Boolean {
+        val transformedHashValue: ByteArray = try {
+            Base64.getUrlDecoder().decode(transformedPassword.value)
+        } catch (_: IllegalArgumentException) {
+            return false
+        }
+        val hashFunction: MessageDigest = MessageDigest.getInstance("SHA-256")
+        val plainBytes: ByteArray = plainTextPassword.value.encodeToByteArray()
+        val hashValue: ByteArray = hashFunction.digest(plainBytes)
+        return hashValue.contentEquals(transformedHashValue)
+    }
+}
+----
+
+== An Example `PasswordStorage`
+
+The `InMemoryPasswordStorage` class provides a solution to the second sub-problem by implementing the `PasswordStorage` interface with an in-memory, thread-safe associative map.
+
+[source, kotlin]
+----
+class InMemoryPasswordStorage : PasswordStorage {
+
+    private val map = ConcurrentHashMap<String, String>()
+
+    override fun set(userId: UserId, transformedPassword: TransformedPassword) {
+        map[userId.id] = transformedPassword.value
+    }
+
+    override fun get(userId: UserId): TransformedPassword? {
+        return map[userId.id]?.let { TransformedPassword(it) }
+    }
+}
+----
+
+We now have everything needed to define a concrete implementation of `PasswordService`.
+
+[source, kotlin]
+----
+class PasswordService {
+
+    private val passwordTransformer: PasswordTransformer = InsecureSha256HashBasedPasswordTransformer()
+    private val passwordStorage: PasswordStorage = InMemoryPasswordStorage()
+
+    fun set(
+        user: UserId,
+        password: PlainTextPassword,
+    ) {
+        // Compute transformed password
+        val transformedPassword = passwordTransformer.transform(password)
+
+        // Store transformed password
+        passwordStorage.set(user, transformedPassword)
+    }
+
+    fun check(
+        user: UserId,
+        password: PlainTextPassword,
+    ): Boolean {
+        // Retrieve stored transformed password
+        val transformedPassword = passwordStorage.get(user) ?: return false
+
+        // If present, check if they match
+        return passwordTransformer.check(password, transformedPassword)
+    }
+}
+----
+
+The `PasswordServiceTests` class contains a set of basic tests for the password management functionality.
+
+[source, kotlin]
+----
+class PasswordServiceTests {
+
+    @Test
+    fun `basic test`() {
+        // given: a password service
+        val passwordService = PasswordService()
+
+        // and: a set of test data
+        val alice = UserId("Alice")
+        val bob = UserId("Bob")
+        val carol = UserId("Carol")
+        val alicePassword = PlainTextPassword("Alice's password")
+        val bobPassword = PlainTextPassword("Bob's password")
+
+        // when: setting Alice's and Bob's passwords
+        passwordService.set(alice, alicePassword)
+        passwordService.set(bob, bobPassword)
+
+        // then: password verification works as expected
+        assertTrue(passwordService.check(alice, alicePassword))
+        assertTrue(passwordService.check(bob, bobPassword))
+
+        assertFalse(passwordService.check(alice, bobPassword))
+        assertFalse(passwordService.check(bob, alicePassword))
+
+        assertFalse(passwordService.check(carol, alicePassword))
+        assertFalse(passwordService.check(carol, bobPassword))
+    }
+}
+----
+
+== Inverting the Control
+
+We now introduce and apply the _inversion of control_ technique.
+
+Given the way we decomposed the problem, the `PasswordService` class will always depend on the `PasswordTransformer` and `PasswordStorage` interfaces.
+However, in the current design, `PasswordService` has additional responsibilities:
+
+* it is responsible for deciding which `PasswordTransformer` and `PasswordStorage` concrete implementations to use;
+* and it is also responsible for creating instances of those implementations.
+
+For instance, using a safer password transformation technique or storing passwords in a more durable storage requires changing the `PasswordService`.
+Also, it is not possible to use the `PasswordService` class with different password transformation or password storage implementations, depending on the context.
+
+The solution to this problem is where the _inversion of control_ technique comes in: instead of `PasswordService` being responsible for _creating_ instances of classes implementing the `PasswordTransformer` and `PasswordStorage`, the `PasswordService` class will _receive_ those instances.
+
+So, instead of the following code
+
+[source, kotlin]
+----
+class PasswordService {
+
+    private val passwordTransformer: PasswordTransformer = InsecureSha256HashBasedPasswordTransformer()
+    private val passwordStorage: PasswordStorage = InMemoryPasswordStorage()
+
+    // ...
+}
+----
+
+where the `passwordTransformer` and `passwordStorage` references are created inside the `PasswordService` class, we will have the following code
+
+[source, kotlin]
+----
+class PasswordService(
+    private val passwordTransformer: PasswordTransformer,
+    private val passwordStorage: PasswordStorage,
+) {
+    // ...
+}
+----
+
+Notice how `PasswordService` no longer depends on the `InsecureSha256HashBasedPasswordTransformer` or `InMemoryPasswordStorage` concrete classes, even though it still depends on the `PasswordTransformer` and `PasswordStorage` interfaces.
+Instead, `PasswordService` receives instances of classes implementing those interfaces, remaining independent of the concrete classes.
+
+This inversion of creation control also impacts the test, which needs to be changed from the following
+
+[source, kotlin]
+----
+// given: a password service
+val passwordService = PasswordService()
+----
+
+into the following
+
+[source, kotlin]
+----
+// given: a password service
+val passwordService = PasswordService(
+    InsecureSha256HashBasedPasswordTransformer(),
+    InMemoryPasswordStorage()
+)
+----
+
+Notice how the test is now responsible for choosing which concrete classes to use and for creating instances of them.
+The dependency on the concrete classes moved from inside the `PasswordService` class to the place where `PasswordService` is instantiated.
+
+We have reached the point where introducing some terminology is appropriate:
+
+* `PasswordService` _depends_ on both the `PasswordTransformer` and `PasswordStorage` interfaces. That is, `PasswordTransformer` and `PasswordStorage` are _dependencies_ of `PasswordService`.
+
+* Inversion of control is the design technique where the dependent receives its dependencies from the outside, instead of being responsible for creating them.
+
+* _Dependency injection_ is the mechanism that provides _dependencies_ to a _dependent_.
+
+* In this example, we are using _constructor injection_, where dependencies are provided to the dependent via constructor arguments.
+An alternative is _property injection_, where the dependent is created first and the dependencies are afterwards assigned to its properties (or provided via setters).
+
+* The instantiation and injection of all the required instances is called _composition_, where solutions to the sub-problems are composed to form a solution to the main problem. In the provided example, this composition happens in the following expression in the test.
+
+[source, kotlin]
+----
+    val passwordService = PasswordService(
+        InsecureSha256HashBasedPasswordTransformer(),
+        InMemoryPasswordStorage()
+    )
+----
+
+Notice, for instance, how an instance of `InMemoryPasswordStorage` is constructed and passed as an argument to the `PasswordService` constructor.
+
+The overall technique is called _inversion of control_ because the instantiation of the dependencies, the _control_, is removed from the dependent and passed to the creator of the dependent.
+
+== Extending the Inversion of Control
+
+A more careful analysis of `InsecureSha256HashBasedPasswordTransformer` identifies another potential application of the inversion of control technique.
+The hash function is being created inside `InsecureSha256HashBasedPasswordTransformer`, which means that this class is coupled to a specific hash algorithm and to the way of creating an implementation of it.
+
+Again, we can invert the control here by providing `InsecureSha256HashBasedPasswordTransformer` with a way to create hash functions.
+
+[source, kotlin]
+----
+fun interface HashFunctionSupplier : Supplier<MessageDigest>
+
+class InsecureHashBasedPasswordTransformer(
+    private val hashFunctionSupplier: HashFunctionSupplier,
+) : PasswordTransformer {
+
+    override fun transform(plainTextPassword: PlainTextPassword): TransformedPassword {
+        val hashFunction: MessageDigest = hashFunctionSupplier.get()
+        val plainBytes: ByteArray = plainTextPassword.value.encodeToByteArray()
+        val hashValue: ByteArray = hashFunction.digest(plainBytes)
+        val hashValueAsString: String = Base64.getUrlEncoder().encodeToString(hashValue)
+        return TransformedPassword(hashValueAsString)
+    }
+
+    override fun check(
+        plainTextPassword: PlainTextPassword,
+        transformedPassword: TransformedPassword
+    ): Boolean {
+        val transformedHashValue: ByteArray = try {
+            Base64.getUrlDecoder().decode(transformedPassword.value)
+        } catch (_: IllegalArgumentException) {
+            return false
+        }
+        val hashFunction: MessageDigest = hashFunctionSupplier.get()
+        val plainBytes: ByteArray = plainTextPassword.value.encodeToByteArray()
+        val hashValue: ByteArray = hashFunction.digest(plainBytes)
+        return hashValue.contentEquals(transformedHashValue)
+    }
+}
+
+----
+
+Since this class is no longer dependent on the SHA-256 algorithm, we removed that designation from its name.
+Again, the composition in the test needs to be changed because it now has the added responsibility of creating and injecting a `HashFunctionSupplier` implementation.
+
+[source, kotlin]
+----
+        // given: a password service
+        val passwordService = PasswordService(
+            InsecureHashBasedPasswordTransformer(
+                {
+                    MessageDigest.getInstance("SHA-256")
+                }
+            ),
+            InMemoryPasswordStorage()
+        )
+----
+
+
+Notice how the complexity of the composition increases as we decompose the problem further and apply the inversion of control technique.
+Each part becomes simpler and more flexible (e.g., `InsecureHashBasedPasswordTransformer` is simpler and more general than `InsecureSha256HashBasedPasswordTransformer`), but the final assembly of the complete system becomes more complex.
+
+This last `InsecureHashBasedPasswordTransformer` refactor also illustrates another important aspect: the `InsecureHashBasedPasswordTransformer` instances receive a reference to a `HashFunctionSupplier`, not to a hash function itself.
+This is because `InsecureHashBasedPasswordTransformer` needs to obtain a new `MessageDigest` instance for each hash computation.
+`MessageDigest` instances are not guaranteed to be thread-safe, and a single `InsecureHashBasedPasswordTransformer` instance may be used concurrently by multiple threads.
+
+The solution to this problem is to inject a supplier of `MessageDigest`, producing a new `MessageDigest` every time the `get` method is called, instead of injecting a single `MessageDigest` instance.
+
+== Dependency Injection Containers
+
+A real system will have many more classes than the example used in this lecture note.
+This means that the composition complexity will also be significantly higher.
+
+This motivates the creation of a _mechanism_ to help with composition.
+One such mechanism is commonly referred to as a _dependency injection container_.
+A typical interface to such a container exposes two types of functionality:
+
+* A way to provide the container with _recipes_ for how types should be instantiated.
+* A way to get an instance from the container.
+
+For our motivating example, a possible set of recipes could be:
+
+* To obtain an instance of a class that implements the `PasswordTransformer` interface, create an instance of the `InsecureHashBasedPasswordTransformer` class by calling its primary constructor.
+* To obtain an instance of a class that implements the `PasswordStorage` interface, create an instance of the `InMemoryPasswordStorage` class using its primary constructor.
+* To obtain an instance of the `PasswordService`, call its primary constructor.
+* To obtain an instance of a class that implements the `HashFunctionSupplier` interface, run the following code `{ MessageDigest.getInstance("SHA-256") }`, i.e., return a lambda expression that internally calls `getInstance`.
+
+After providing the container with these recipes, whose order is not relevant, we can then ask the container for an instance of `PasswordService`.
+It is the container's responsibility to create instances in the correct order and inject them into other created instances.
+
+The following code excerpt illustrates the use of Spring Context to compose a `PasswordService` instance.
+
+[source, kotlin]
+----
+fun compose(): PasswordService {
+    val context: AnnotationConfigApplicationContext = AnnotationConfigApplicationContext(
+        PasswordService::class.java,
+        InsecureHashBasedPasswordTransformer::class.java,
+        InMemoryPasswordStorage::class.java,
+        BeanProvider::class.java,
+    )
+
+    return context.getBean(PasswordService::class.java)
+}
+
+class BeanProvider {
+    @Bean
+    fun hashFunctionSupplier(): HashFunctionSupplier = HashFunctionSupplier {
+        MessageDigest.getInstance("SHA-256")
+    }
+}
+----
+
+The container class used is called `AnnotationConfigApplicationContext` (the Spring Context library has other context classes).
+During construction, the context instance receives a list of `Class<T>` instances.
+These are the _recipes_ we described before.
+For instance, by passing `InMemoryPasswordStorage::class.java` to the context, we are providing the context with the information that:
+
+* The `InMemoryPasswordStorage` class exists and can be used if some class depends on it, or one of the interfaces it implements, such as `PasswordStorage`.
+* If an `InMemoryPasswordStorage` instance is needed, call the class's constructor (in this case, its parameterless primary constructor).
+
+IMPORTANT: Note how `AnnotationConfigApplicationContext` does not receive an instance of `PasswordService`. Instead, it receives `PasswordService::class.java`, which is an instance of `Class<T>`.
+That is, the code using the context does not have the responsibility to instantiate a `PasswordService`.
+
+The _recipe_ to create a `HashFunctionSupplier` needs to be provided in a different way, since there isn't any concrete class implementing that interface.
+Instead, a different technique needs to be applied:
+
+* We provide the container with a class (not an instance) containing a `@Bean` annotated function.
+* That `@Bean` annotated function has a `HashFunctionSupplier` return type. This informs the container that this function can be used to create a `HashFunctionSupplier` instance, or more precisely, an instance of a class implementing the `HashFunctionSupplier` interface.
+
+The container will create an instance of `BeanProvider` using its default constructor, and then call `hashFunctionSupplier` on that instance to obtain the `HashFunctionSupplier` instance.
+
+=== Runtime Errors
+
+If we don't provide the context with all the information (i.e., the _recipes_) needed to construct the required instance, a runtime error will occur in the form of an exception thrown by the `getBean` method call.
+Unfortunately, when using containers such as Spring Context, we lose the ability to have the type system check if the composition is correct.
+Since this composition is defined dynamically, its success or failure is only determined at runtime.
+Thankfully, the exception thrown by the `getBean` method call will contain a very descriptive explanation of why the composition failed.
+The following excerpt presents an example of such exception information, obtained if the `BeanProvider` class is not registered.
+
+[source,text]
+----
+Error creating bean with name 'passwordService':
+    Unsatisfied dependency expressed through constructor parameter 0:
+        Error creating bean with name 'unsecureHashBasedPasswordTransformer':
+            Unsatisfied dependency expressed through constructor parameter 0:
+                No qualifying bean of type 'pt.isel.daw.example.HashFunctionSupplier' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+----
+
+Note how the container is informing us that the root cause is its inability to create a `HashFunctionSupplier`, since it doesn't have any _recipe_ for it.
+
+IMPORTANT: Always carefully read the exception messages thrown by the context when retrieving instances fails.
+They typically contain information about the root cause of the problem, although this information may not be at the beginning of the message.
+
+=== Component Scanning
+
+Instead of explicitly providing the context with all relevant classes, it is possible to instruct the context to look up those classes, in a process called _component scanning_.
+This is achieved by:
+
+* Calling the `scan` method on the context, passing the list of base packages to search.
+* Annotating the relevant classes with the `@Component` annotation.
+
+Only classes annotated with `@Component` are considered.
+This is necessary because some classes in a package are not meant to be instantiated by the container.
+For instance, in our example, the classes `UserId`, `PlainTextPassword`, and `TransformedPassword` are instantiated directly by application code.
+The only classes we need to annotate are: `PasswordService`, `InMemoryPasswordStorage`, `InsecureHashBasedPasswordTransformer`, and the auxiliary `BeanProvider`.
+Interfaces do not need to be annotated.
+
+When using component scanning, the Spring context usage becomes
+
+[source, kotlin]
+----
+fun compose(): PasswordService {
+    val context: AnnotationConfigApplicationContext = AnnotationConfigApplicationContext()
+    context.scan("pt.isel.daw.example")
+    context.refresh()
+    return context.getBean(PasswordService::class.java)
+}
+----
+
+The `refresh` call is required because, unlike the constructor receiving the list of classes used previously, the parameterless constructor does not initialize the context.
+After all the _recipes_ are provided, via `scan` or `register`, the `refresh` call initializes the context so that it can be used to obtain instances.
+
+IMPORTANT: Until this last step, our production (`src/main`) code was completely independent of the Spring Context library.
+The only dependency was on the inversion of control _technique_ and not on a specific library.
+Unfortunately, the need to annotate some classes with `@Component` breaks that independence.
+However, the annotated classes can still be used without a container, since the presence of the `@Component` annotation does not mandate the use of a container or component scanning.
+It simply enables the use of component scanning.
+
+== Summary and Recommended Practices
+
+=== Summary
+
+* _Inversion of Control_ is the design technique where a class receives its dependencies instead of creating them.
+    ** _Dependencies_ are the external types that a class needs to perform its function.
+    ** _Inversion of Control_ provides more flexibility in how classes are used, because the usage context can decide which concrete dependencies to use.
+        *** E.g., use different concrete dependencies in an application or in a unit test.
+    ** This flexibility is made possible if the dependencies are defined as interfaces and not as concrete (i.e., non-abstract) classes.
+
+* _Dependency Injection_ is the act of providing the dependencies to the class instance that needs them.
+    ** _Constructor Injection_ happens when those dependencies are provided as constructor arguments.
+    ** _Property Injection_ happens when those dependencies are provided by assigning them to properties (or via setters), after the _dependent_ instance is created.
+
+* _Dependency Injection Container_ is a mechanism that knows how to create instances and inject all the dependencies into them.
+
+** The use of the inversion of control design technique does not require the use of a dependency injection container. Dependencies can be provided (i.e., injected) manually.
+
+* _Dependency Graph_
+    ** Consider type `A` that depends on types `B` and `C`.
+    ** Types `B` and `C` can also have their own dependencies, for instance, types `D` and `E`, and types `F` and `G`, respectively.
+    ** These types and their dependencies define a directed graph, where types (or instances) are the nodes and dependency relations are the edges.
+    ** When using constructor injection:
+        *** To construct an instance of `A`, we need to construct instances of `B` and `C`.
+        *** However, to construct an instance of `B`, we need to first construct instances of `D` and `E`.
+        *** And to construct an instance of `C`, we need to first construct instances of `F` and `G`.
+    ** Computing the construction order and calling the constructors can be done automatically by a container, based on the dependency graph, or can be done by explicitly written application code.
+
+=== Recommended Practices
+
+* Components should use the inversion of control technique; however, they should (mostly) *not depend* on a specific container or automatic dependency injection technology.
+    ** Why?
+        *** To enable unit testing without the need to use the container, i.e., by using _manual_ dependency injection.
+        *** To enable usage with different container technologies.
+    ** What does this mean?
+        *** Avoid depending on or using container-specific types or functions.
+        *** An example is depending on the container itself.
+    ** There are situations where it may be unavoidable to depend on the specific container technology. Always triple-check if that is the case.
+    ** An example where we need to use container-specific technology is in the use of the `@Component` annotation to include a class in the component scan procedure.
+
+* Always prefer constructor injection instead of property injection.
+    ** Why?
+        *** So that the component instance is immediately usable after construction, because it already has all the necessary dependencies.
+        *** So that the dependencies are immutable, non-nullable references.
+        *** Note that when using property injection, there is a time interval where the instance is created but isn't yet usable because the dependencies haven't been provided to it yet. In addition, property injection requires the dependency fields to be mutable, with all the consequences of mutability.
+
+    ** Only use property injection when constructor injection is not possible, e.g., when the instance creation is not controlled by the container, so the injection needs to be done at a later stage.
+
+* Not all object instances in a system will be created and managed by a DI container.
+Designing a software system that uses IoC and a DI container requires having this distinction clearly defined for all types. For this, it is convenient to consider that objects play different roles in a system.
+
+    ** For instance, some objects are just containers of functions, typically used via interface references, providing a set of related functionality. It is common to call these objects _services_ (or _service providers_). These objects typically form a graph, since a service provider may use other service providers to implement its functionality.
+
+    ** Other objects are just holders of structured data (e.g., the `data class` construct in Kotlin).
+
+    ** It is common for service providers to be provided via DI, while data holders are explicitly created by application code or framework code and passed via function arguments.
+
+    ** Consider a typical Spring MVC controller example.
+
+        *** The controller can be considered a service provider, exposing functions that the MVC framework uses to handle HTTP requests.
+
+        *** The controller may use other services to implement its own functionality, such as services to implement domain logic or access external data repositories. These other service instances are typically managed by the Spring context and provided via constructor injection.
+
+        *** The controller's handlers receive objects representing the incoming HTTP request message and the HTTP response message that will be produced. These objects are mostly data holders and are not managed by the Spring context.
+
+* _Scopes_ define when new container-managed objects should be created or instead reused between multiple injections.
+
+    ** A scope example is when the same instance is used for all managed objects that depend on that instance type. Spring context calls this the _singleton_ scope, and it is the default scope.
+
+    ** Another scope example is when a new "fresh" instance is always created for each new injection. Spring context calls this the _prototype_ scope.
+
+    ** Sharing the same instance between multiple injections typically requires the injected instances to be thread-safe, since the same instance will typically be used on multiple threads.
