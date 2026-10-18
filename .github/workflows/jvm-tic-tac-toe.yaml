@@ -1,0 +1,20 @@
+name: tic-tac-toe continuous check
+
+on: 
+  push:
+    paths:
+      - code/jvm/tic-tac-toe/**
+
+jobs:
+  build:
+    name: tic-tac-toe Continuous Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+      - name: Build with Gradle
+        run: ./code/jvm/tic-tac-toe/gradlew -p code/jvm/tic-tac-toe check --info
