@@ -85,3 +85,67 @@
 * Examples using reducers with TypeScript.
 * Resources:
     ** See resources from the previous lecture.
+
+== Lecture 7 - 2026-09-30
+
+* React context and making _reactive_ information available for a component sub-tree.
+* The `useRef` hook function.
+* Supporting the first exercise set.
+
+* Resources:
+    ** link:https://react.dev/learn/passing-data-deeply-with-context[Passing Data Deeply with Context].
+    ** link:https://react.dev/reference/react/useRef[`useRef`].
+
+== Lecture 8 - 2026-10-02
+
+* Supporting the first exercise set.
+* Resources:
+    ** See resources from the previous lecture.
+
+== Lecture 9 - 2026-10-07
+
+* Evaluations for the first set of exercises.
+
+== Lecture 10 - 2026-10-09
+
+* Remote class (ISEL was closed).
+* The browser's history API.
+* Client-side routing.
+* The `react-router` library for client-side routing on React-based applications.
+* Resources
+    ** link:https://github.com/isel-leic-daw/s2627i-51d-51n/blob/main/docs/lecture-notes/7-react-router.adoc[React and Client-Side Routing].
+
+== Lecture 11 - 2026-10-14
+
+* No in-person lecture.
+* An introduction to Inversion of Control (IoC) and Dependency-Injection (DI).
+    ** Dependants and dependencies.
+    ** Constructor-injection - providing the dependencies via constructor arguments.
+    ** The Spring Context dependency injection container.
+    ** Spring context usage examples.
+* The Java Servlet API
+    ** The `HttpServlet` and `HttpFilter` types.
+    ** Usage examples.
+* Introduction to the Spring MVC framework.
+    ** Controllers and handlers.
+        *** Controller arguments
+        *** Controller return
+    ** Pipeline elements
+        *** Handler interceptors.
+        *** Argument resolvers.
+        *** Message converters.
+
+* Resources:
+    ** link:https://github.com/isel-leic-daw/s2627i-51d-51n/blob/main/docs/lecture-notes/8-development-environment-and-practices.adoc[Development Environment and Practices].
+    ** link:https://github.com/isel-leic-daw/s2627i-51d-51n/blob/main/docs/lecture-notes/9-development-environment-check.adoc[Development Environment] requirements.
+    ** link:https://github.com/isel-leic-daw/s2627i-51d-51n/blob/main/docs/lecture-notes/a-inversion-of-control-and-dependency-injection.adoc[Inversion of Control and Dependency Injection].
+    ** link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/spring-context[`spring-context`] project.
+    ** link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/servlets[`servlets`] project.
+    ** link:https://github.com/isel-leic-daw/s2627i-51d-51n/tree/main/code/jvm/spring-boot-mvc-intro[`spring-boot-mvc-intro`]. 
+
+== Lecture 12 - 2026-10-16
+
+* No in-person lecture.
+* Continuing the previous lecture.
+* Resources:
+    ** See resources from the previous lecture.
