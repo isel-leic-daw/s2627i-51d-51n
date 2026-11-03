@@ -16,8 +16,14 @@ fun main() {
     val server = Server(8080).apply {
         handler = ServletContextHandler(ServletContextHandler.NO_SESSIONS).apply {
             setContextPath("/")
-            addServlet(ServletHolder("example-servlet", ExampleServlet()), "/*")
-            addFilter(FilterHolder(ExampleFilter()), "/*", null)
+            addServlet(ServletHolder("example-servlet", ExampleServlet()), "/api/servlet")
+            addServlet(ServletHolder("example-sse", SseServlet()), "/api/sse")
+            addServlet(
+                ServletHolder("example-sse-async", SseAsyncServlet()).apply { isAsyncSupported = true },
+                "/api/sse-async",
+            )
+            // All filters in the chain must also support async, otherwise startAsync throws IllegalStateException
+            addFilter(FilterHolder(ExampleFilter()).apply { isAsyncSupported = true }, "/*", null)
         }
     }
     server.start()

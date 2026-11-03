@@ -1,5 +1,7 @@
 package pt.isel.daw.servlets
 
+import jakarta.servlet.AsyncEvent
+import jakarta.servlet.AsyncListener
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpFilter
 import jakarta.servlet.http.HttpServlet
@@ -68,11 +70,36 @@ class ExampleFilter : HttpFilter() {
         // QUESTION what happens if a filter does not call chain.doFilter?
         chain.doFilter(request, response)
 
-        // Performed after the request was handled by the servlet
-        val end = System.nanoTime()
-        val delta = end - start
-        log.info("doFilter: after chain call, took: {} us", delta)
+        // Performed after the servlet returned
+        log.info("doFilter: after chain call, took: {} us", elapsedMicros(start))
+
+        // If the servlet started async processing, the response is not yet complete.
+        // An AsyncListener is used to be notified when the async processing ends.
+        // Note that the filter must be registered with async support for the servlet to be able to start async.
+        if (request.isAsyncStarted) {
+            request.asyncContext.addListener(
+                object : AsyncListener {
+                    override fun onComplete(event: AsyncEvent) {
+                        log.info("onComplete: async request completed, took: {} us", elapsedMicros(start))
+                    }
+
+                    override fun onTimeout(event: AsyncEvent) {
+                        log.info("onTimeout: async request timed out, took: {} us", elapsedMicros(start))
+                    }
+
+                    override fun onError(event: AsyncEvent) {
+                        log.info("onError: async request failed, took: {} us", elapsedMicros(start), event.throwable)
+                    }
+
+                    override fun onStartAsync(event: AsyncEvent) {
+                        // Only called if startAsync is called again on the same request
+                    }
+                },
+            )
+        }
     }
+
+    private fun elapsedMicros(start: Long) = (System.nanoTime() - start) / 1_000
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(ExampleFilter::class.java)
