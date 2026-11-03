@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 
+// const SSE_URL = "https://httpbun.com/sse" // Using the httpbun.com test server
+// const SSE_URL = "api/sse" // Using the synchronous servlet
+const SSE_URL = "api/sse-async" // Using the synchronous servlet
+
 const READY_STATE_MAP = [
     "CONNECTING",
     "OPEN",
@@ -16,7 +20,7 @@ type HandledEvent =
 export function App() {
   const [events, setEvents] = useState<Array<HandledEvent>>([]);
   useEffect(() => {
-    const eventSource = new EventSource("https://httpbun.com/sse");
+    const eventSource = new EventSource(SSE_URL);
 
     eventSource.addEventListener("error", () => {
       setEvents((it) => [...it, { kind: "error" , readyState: READY_STATE_MAP[eventSource.readyState] || "unknown"}]);
