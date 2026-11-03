@@ -5,7 +5,7 @@ type ExampleContextType = {
   incr: () => void;
 };
 const ExampleContext = createContext<ExampleContextType>({
-  value: 0,
+  value: 42,
   incr: () => {},
 });
 
@@ -45,10 +45,12 @@ function GranParent() {
 }
 
 const Parent = memo(function Parent() {
+  const value = useExampleContextValue();
   console.log("Render Parent");
   return (
     <>
       <h2>Parent</h2>
+      {value}
       <Child />
     </>
   );
@@ -56,19 +58,24 @@ const Parent = memo(function Parent() {
 
 function Child() {
   const value = useExampleContextValue();
-  console.log("Child")
+  const incr = useExampleContextIncr()
+  console.log("Child");
   return (
     <>
       <h3>Child</h3>
       {value}
+      <button onClick={() => incr()}>incr</button>
     </>
   );
 }
 
 export function App() {
   return (
-    <ExampleContextProvider>
-      <GranParent />
-    </ExampleContextProvider>
+    <div>
+      <GranParent/>
+      <ExampleContextProvider>
+        <GranParent />
+      </ExampleContextProvider>
+    </div>
   );
 }

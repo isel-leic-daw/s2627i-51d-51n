@@ -1,9 +1,12 @@
 import { createRoot } from "react-dom/client";
 //import {main} from './example-first/main.js'
-import {App} from './example-state/App.tsx'
+//import {App} from './example-state/App.tsx'
 //import { App } from "./example-timer/App.tsx";
-// import { App } from "./example-lap-timer/App.tsx";
-// import { App } from "./example-context/App.tsx";
+//import { App } from "./example-lap-timer/App.tsx";
+//import { App } from "./example-context/App.tsx";
+//import { App } from "./example-context-theme/App.tsx";
+// import { App } from "./example-react-router/App.tsx";
+import { App } from "./example-sse/App.tsx";
 
 //console.log("main starting");
 //main()

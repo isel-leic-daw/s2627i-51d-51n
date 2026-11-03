@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { buttons, laps } from "./LapTimer";
-import { type State, initialState } from "./reducer";
+import { type State, INITIAL_STATE } from "./reducer";
 import { duration, instant } from "./time";
 
 const runningState: State = {
@@ -19,7 +19,7 @@ const stoppedState: State = {
 
 describe("laps", () => {
   test("returns nothing on the initial state", () => {
-    expect(laps(initialState)).toBeNull();
+    expect(laps(INITIAL_STATE)).toBeNull();
   });
 
   test("returns a list with one item per lap on the running state", () => {
@@ -58,7 +58,7 @@ describe("buttons", () => {
   const anyHandler = expect.any(Function);
 
   test("returns only start on the initial state", () => {
-    expect(buttons(initialState, vi.fn(), { current: null })).toEqual(
+    expect(buttons(INITIAL_STATE, vi.fn(), { current: null })).toEqual(
       <button onClick={anyHandler}>start</button>,
     );
   });

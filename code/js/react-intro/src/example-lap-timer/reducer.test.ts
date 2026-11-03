@@ -6,15 +6,15 @@ import {
   actionStart,
   actionStop,
   actionTick,
-  initialState,
+  INITIAL_STATE,
   reduce,
 } from "./reducer";
 import { duration, instant } from "./time";
 
 describe("lap timer reducer", () => {
-  test("happy flow: start, tick, lap, tick, lap, stop, reset", () => {
+  test("happy path: start, tick, lap, tick, lap, stop, reset", () => {
     // given: the initial state
-    let state: State = initialState;
+    let state: State = INITIAL_STATE;
 
     // when: the timer is started at 1000
     state = reduce(state, actionStart(instant(1000)));
@@ -29,7 +29,7 @@ describe("lap timer reducer", () => {
 
     // when: a tick happens at 1500
     state = reduce(state, actionTick(instant(1500)));
-    // then: 500ms have elapsed
+    // then: 500 ms have elapsed
     expect(state).toEqual({
       kind: "running",
       laps: [],

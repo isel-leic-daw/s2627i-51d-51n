@@ -5,6 +5,7 @@
   "license": "ISC",
   "author": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "test": "vitest",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "react-router": "^8.4.0"
   }
 }

@@ -41,7 +41,7 @@ export type State =
     }
   | { kind: "stopped"; laps: Array<Duration>; elapsed: Duration };
 
-export const initialState: State = { kind: "initial" };
+export const INITIAL_STATE: State = { kind: "initial" };
 
 // Reducer
 // - "pure function" (except for the console.log side-effect on an error)
@@ -112,7 +112,7 @@ export function reduce(state: State, action: Action): State {
         case "stop":
           return unexpectedStateAndAction(state, action);
         case "reset":
-          return initialState;
+          return INITIAL_STATE;
       }
   }
 }

@@ -1,4 +1,10 @@
-import React, { useEffect, useReducer, useRef } from "react";
+import React, {
+  ReactElement,
+  ReactNode,
+  useEffect,
+  useReducer,
+  useRef,
+} from "react";
 import {
   type Action,
   type State,
@@ -7,7 +13,7 @@ import {
   actionStart,
   actionStop,
   actionTick,
-  initialState,
+  INITIAL_STATE,
   reduce,
 } from "./reducer";
 import { duration, formatDuration, now } from "./time";
@@ -17,11 +23,13 @@ type LapTimerProps = {
 };
 
 export function LapTimer(props: LapTimerProps) {
-  const [state, dispatch] = useReducer(reduce, initialState);
+  const [state, dispatch] = useReducer(reduce, INITIAL_STATE);
   const intervalIdHolder = useRef<number | null>(null);
   useEffect(() => {
+    // no effect!
     return () => {
-      // oxlint-disable-next-line react-hooks/exhaustive-deps
+      // effect cleanup
+      // oxlint-disable-next-line react-hooks/exhaustive-deps current does not point to a DOM note
       const intervalId = intervalIdHolder.current;
       if (intervalId) {
         clearInterval(intervalId);
@@ -43,7 +51,7 @@ export function buttons(
   state: State,
   dispatch: React.ActionDispatch<[action: Action]>,
   intervalIdHolder: React.RefObject<number | null>,
-) {
+): ReactElement {
   switch (state.kind) {
     case "initial":
       return (
@@ -91,7 +99,7 @@ function stopTimer(
   dispatch(actionStop(now()));
 }
 
-export function laps(state: State) {
+export function laps(state: State): ReactNode {
   switch (state.kind) {
     case "initial":
       return null;
@@ -112,7 +120,7 @@ export function laps(state: State) {
 function timerValueFromState(state: State): string {
   switch (state.kind) {
     case "initial":
-      return formatDuration(duration(0));
+      return formatDuration(duration(state.elapsed));
     case "running":
     case "stopped":
       return formatDuration(state.elapsed);
