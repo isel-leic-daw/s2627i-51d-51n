@@ -14,7 +14,7 @@
 
 - Final project.
     - Requirements published until 2026-11-09 (start of week 10).
-    - Delivered until 2026-12-13 (end of week 15).
+    - Delivered until 2026-12-13 (end of week 14).
     - Final evaluations on weeks 15 and 16. 
 
 ## Tentative weekly planning
