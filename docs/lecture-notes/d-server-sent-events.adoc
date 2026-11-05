@@ -1,0 +1,164 @@
+# Server-Sent Events (SSE)
+
+## Introduction
+
+This lecture note contains a brief introduction to the Server-Sent Events specification, its motivations, browser support, and also Servlet and Spring MVC support.
+
+## Motivation
+
+The HTTP specification, in the link:https://datatracker.ietf.org/doc/html/rfc9110[RFC 9110], states:
+
+[quote]
+____
+HTTP is a client/server protocol that operates over a reliable transport- or session-layer "connection".
+
+An HTTP "client" is a program that establishes a connection to a server for the purpose of sending one or more HTTP requests. An HTTP "server" is a program that accepts connections in order to service HTTP requests by sending HTTP responses.
+
+The terms client and server refer only to the roles that these programs perform for a particular connection. The same program might act as a client on some connections and a server on others.
+____
+
+Even if the same system can play both roles, there are some network requirements that servers need to fulfil: a client needs to be able to establish a connection to them.
+This typically means that servers need to have a name registered in the Domain Name System (DNS), a set of mostly stable IP addresses, and the ability to accept incoming connections on some ports.
+Currently, these requirements are not easily fulfilled by processes running on personal computers or mobile devices.
+Typically they don't have DNS names nor stable IP addresses, due to the mobility between networks, such as a home WiFi or a 5G mobile network.
+Also, they frequently only have private IP addresses, sitting behind Network Address Translation (NAT) performed by home routers or by the mobile carriers, which means they aren't directly reachable from the internet.
+And for security reasons, most if not all inbound connections are also not allowed.
+
+Systems such as link:https://ngrok.com[ngrok] or link:https://developers.cloudflare.com/tunnel/[Cloudflare Tunnel] allow exposing local processes running on a personal computing device as servers on the internet.
+They mostly use an intermediary that relays between two connections, each one opened _to_ the intermediary.
+Let `C` be the client machine (any system with outbound connectivity to the internet), `S` be the server machine (a personal computing device), and `I` a system run by the service provider (e.g. ngrok or Cloudflare).
+
+* The server process running in `S` listens for connections in a loopback address.
+
+* A daemon-like application is installed in `S`. This application establishes an outbound connection to `I`.
+
+* The origin server DNS name is bound to `I`.
+
+* A request sent by a client `C` to the origin server `S` takes the following route:
+
+    ** From `C` to `I`, via the connection established by `C` to `I`.
+    ** From `I` to `S`, via the connection established by the daemon in `S` to `I`.
+    ** Inside `S`, from the daemon to the server via a connection established between the daemon and the server via the loopback address.
+
+A similar solution is used by mobile operating systems to deliver notifications to applications running on mobile devices: a long-lived connection is established by these devices to server systems operated by the mobile platforms.
+Notifications then flow through these connections, in the opposite direction, i.e., from the server systems to the mobile devices.
+
+## The Server-Sent Events specification
+
+In the HTTP protocol, request messages are sent by clients.
+Response messages are sent back by servers, but always as a response to a client request message.
+However, there are use cases where server systems may want to send data to a client by its own initiative, and not as a response to a client request.
+The Server-Sent Events link:https://html.spec.whatwg.org/multipage/server-sent-events.html[specification] defines a way for a server to use the payload of a single response as the communication medium for _pushing_ a sequence of _events_ into the client.
+
+It all starts with a client creating a connection to the server or using an existing one.
+Using this connection, the client then sends a request message using the `GET` method.
+The server then initiates the sending of a response message through the same connection.
+The server does that by sending a status line with the `200` status code and a `Content-Type` header with the SSE `text/event-stream` type.
+This media type signals to the client that the server will use the response payload to push events according to the SSE specification.
+
+The `text/event-stream` is a text-based line-oriented format, where an event is transmitted as one or more sequential text lines:
+
+* Empty lines serve as event delimiters. An event is only dispatched when the empty line that ends it is received.
+* Lines _starting_ with a `:` are considered comments and are ignored.
+* Other lines define a _field_. The part before the first `:` is the _field name_ and the part after it is the _field value_, with a single leading space removed if present (i.e., `data: x` and `data:x` both have the value `x`). A line without any `:` defines a field with that name and an empty value.
+
+Example:
+[source, text]
+----
+HTTP/2 200
+content-type: text/event-stream
+
+event: ping
+id: 1
+data: a ping event
+
+event: ping
+id: 2
+data: another ping event
+data: with multiple lines in the data
+
+----
+
+The following field names are defined by the SSE specification:
+
+* `event` - the field value defines the _event type_.
+* `data` - the field value defines the _event data_. Multiple fields with this name accumulate for the _event data_.
+* `id` - the field value defines the _event ID_. The browser remembers the last received ID and sends it in the `Last-Event-ID` request header when reconnecting, allowing the server to resume the event sequence.
+* `retry` - if the field value represents an integer in base 10, then it is used as the link:https://html.spec.whatwg.org/multipage/server-sent-events.html#concept-event-stream-reconnection-time[reconnection time], in milliseconds.
+* Fields with other names are ignored.
+
+Example:
+[source, text]
+----
+: this is a comment
+
+data: event with a single-line data
+
+data: event with
+data: multiple lines
+
+event: some-type
+id: 123
+data: event of type 'some-type' and ID '123'
+
+----
+
+Run the following shell command to see an example of an SSE response.
+[source,shell]
+----
+curl -i https://httpbun.com/sse
+----
+
+## Browser support
+
+The link:https://html.spec.whatwg.org/multipage/server-sent-events.html[SSE specification] also defines the browser API (Application Programming Interface) to use this media type.
+
+The link:https://developer.mozilla.org/en-US/docs/Web/API/EventSource[`EventSource`] constructor function performs a GET request to the target URI passed as argument, returning an object that represents that _SSE connection_.
+
+[source,typescript]
+----
+const eventSource = new EventSource("https://httpbun.com/sse");
+----
+
+The returned object (`eventSource` in the previous example) exposes the following functionality:
+
+* A `readyState` property returning the state of the SSE connection as a number, with possible values being `CONNECTING` (0), `OPEN` (1), or `CLOSED` (2).
+* A `close` method to close the SSE connection.
+* The `addEventListener` and `removeEventListener` methods, allowing the registration and deregistration of event handlers for the following events:
+    ** `open` - the SSE connection was successfully established, meaning that the server responded with a 200 status code and a `text/event-stream` `Content-Type` header.
+    ** `error` - the SSE connection was not successfully established or it ended. If the connection ended, the browser automatically tries to reconnect after the reconnection time, unless `close` was called or the failure was fatal (e.g. a non-200 status code or a wrong `Content-Type`), in which case `readyState` becomes `CLOSED`.
+    ** `message` - an event without an `event` field was received.
+    ** _event-type_ - an event with an `event` field equal to _event-type_ was received.
+
+The handlers for received events are called with a link:https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent[`MessageEvent`] object, containing the event data in the `data` property and the event ID in the `lastEventId` property.
+
+The project `code/js/react-intro` contains an example React component using SSE and the `EventSource` type.
+
+## Servlet Support
+
+When using servlets directly, it is rather straightforward to produce a response using the `text/event-stream` media type, including some events.
+The `code/jvm/servlets` project contains a `SseServlet` illustrating exactly this.
+However, this naive design and implementation has a cost: any pending request used to send events through its response is blocking a request thread.
+That is, `N` active _SSE connections_ consume `N` threads.
+This happens because the `doGet` method can only return after the _SSE connection_ is completed.
+And while the `doGet` call doesn't return, the request thread selected to process that request does not become available to process other requests.
+
+What we need is a way to let the `doGet` method end, making the request thread available to process another request, while:
+
+* Keeping a reference to the output stream associated with the response.
+* Informing the servlet container that the response isn't yet completed.
+
+The `SseAsyncServlet` class in the same `code/jvm/servlets` project achieves exactly this, by using the link:https://jakarta.ee/learn/docs/jakartaee-tutorial/current/web/servlets/servlets.html#_asynchronous_processing[_servlet async model_].
+
+## Spring MVC support
+
+The project `spring-boot-mvc-intro` contains a `SseController` showing how a handler can:
+
+* Create an `SseEmitter` instance, representing an _SSE connection_.
+* Return that instance from the handler, informing Spring MVC that the response uses the `text/event-stream` media type.
+* Send events through the `SseEmitter`, _after_ the handler has already returned.
+* Detect conditions that may occur, such as the inability to write in the response socket or the _SSE connection_ ending, via the `onError` and `onCompletion` callbacks.
+
+## Additional Resources
+
+* link:https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format[SSE Event Stream Format].
